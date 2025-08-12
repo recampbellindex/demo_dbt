@@ -94,7 +94,7 @@ stages:
       # Run Data Build Tool
       #
       - type: shell
-        command: dbt build --profile ${DBT_PROFILE} --project-dir ${DBT_PROJECT_DIR} --select ${DBT_MODELS} --full-refresh
+        command: dbt build --profile ${DBT_PROFILE} --project-dir ${DBT_PROJECT_DIR} --select "${DBT_MODELS}" --full-refresh
   PostDeploy:
     actions:
       #

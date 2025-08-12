@@ -3,13 +3,13 @@ liquibase:
   outputs:
     dev:
       type: snowflake
-      account: ba89345.us-east-2.aws
-      user: JBENNETT
+      account: BA89345.us-east-2.aws
+      user: adeelmalik
       role: LIQUIBASE_USER
-      database: PRODDB
-      warehouse: LIQUIBASEPRO_WH
+      database: AMDB
+      warehouse: CUSTOMERSUCCESS_WH
       schema: DBT
       threads: 4
       client_session_keep_alive: False
-      private_key_path: C:\Liquibase\Tests\Customers\2025\Voya\Demo_DBT\liquibase\keys\rsa_pkcs1.pem
-      # private_key_passphrase: "your_passphrase_if_any"
+      private_key_path: /Users/adeelmalik/adeelmalik.p8
+      private_key_passphrase: "1234"

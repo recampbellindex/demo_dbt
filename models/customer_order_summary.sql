@@ -23,6 +23,7 @@ customers as (
     select
         customer_id,
         customer_name,
+        email,
         signup_date,
         country_code,
         is_active
@@ -55,6 +56,7 @@ final as (
     select
         c.customer_id,
         c.customer_name,
+        c.email,
         coalesce(ao.order_count, 0) as order_count,
         coalesce(ao.total_spent, 0) as total_spent,
         ao.last_order_date,

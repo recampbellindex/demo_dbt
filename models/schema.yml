@@ -2,7 +2,7 @@ version: 2
 
 sources:
   - name: prod
-    database: PRODDB
+    database: AMDB
     schema: PUBLIC
     tables:
       - name: customers
@@ -36,7 +36,7 @@ sources:
 models:
   - name: customer_order_summary
     description: "Summary of customer orders with key metrics and customer segmentation."
-    database: PRODDB
+    database: AMDB
     schema: DBT
     columns:
       - name: customer_id

@@ -35,7 +35,8 @@ stages:
       # Remove files
       #
       - type: shell
-        command: del /f *_${LB_ENVIRONMENT}.html *_${LB_ENVIRONMENT}.json Changesets\${NEW_CHANGELOG_FILE}
+        command: rm -rf *_${LB_ENVIRONMENT}.html *_${LB_ENVIRONMENT}.json Changesets\${NEW_CHANGELOG_FILE}
+        # command: del /f *_${LB_ENVIRONMENT}.html *_${LB_ENVIRONMENT}.json Changesets\${NEW_CHANGELOG_FILE}
       #
       # Create updated snapshot
       #
