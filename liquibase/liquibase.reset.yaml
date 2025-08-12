@@ -1,0 +1,53 @@
+###
+### Liquibase version: 4.30.0+
+###
+### Liquibase sales: https://www.liquibase.com/contact-us
+### Liquibase support: https://support.liquibase.com
+###
+
+###
+### Flow documentation: https://docs.liquibase.com/commands/flow/flow.html
+###
+
+###
+### Global variables used in the flowfile
+###
+globalVariables:
+  LB_BASE_DIR: "${LB_BASE_DIR:-.}"
+  LB_ENVIRONMENT: "${LB_ENVIRONMENT:-DEV}"
+  NEW_CHANGELOG_FILE: "liquibase.snowflake.sql"
+  SNAPSHOT_FILE: "Snapshot_${LB_ENVIRONMENT}.json"
+
+###
+### Stages to execute
+###
+stages:
+  Default:
+    actions:
+      #
+      # Rollback last updates
+      #
+      - type: liquibase
+        command: rollback-count
+        globalArgs: { reports-enabled: "false" }
+        cmdArgs: { count: "6" }
+      #
+      # Remove files
+      #
+      - type: shell
+        command: del /f *_${LB_ENVIRONMENT}.html *_${LB_ENVIRONMENT}.json Changesets\${NEW_CHANGELOG_FILE}
+      #
+      # Create updated snapshot
+      #
+      - type: liquibase
+        command: snapshot
+        globalArgs: { outputfile: "${LB_BASE_DIR}/${SNAPSHOT_FILE}" }
+        cmdArgs: { snapshotFormat: "json" }
+
+###
+### Always execute
+###
+endStage:
+  actions:
+    - type: liquibase
+      command: history

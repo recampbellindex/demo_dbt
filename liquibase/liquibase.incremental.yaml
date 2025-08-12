@@ -1,0 +1,70 @@
+###
+### Liquibase version: 4.30.0+
+###
+### Liquibase sales: https://www.liquibase.com/contact-us
+### Liquibase support: https://support.liquibase.com
+###
+
+###
+### Flow documentation: https://docs.liquibase.com/commands/flow/flow.html
+###
+
+###
+### Global variables used in the flowfile
+###
+globalVariables:
+  LB_ENVIRONMENT: "${LB_ENVIRONMENT:-DEV}"
+
+  NEW_AUTHOR: "${NEW_AUTHOR:-JBennett}"
+  NEW_CHANGELOG_FILE: "liquibase.snowflake.sql"
+  NEW_LABEL_FILTER: "${NEW_LABEL_FILTER:-add_email_column}"
+
+  SNAPSHOT_FILE: "Snapshot_${LB_ENVIRONMENT}.json"
+
+###
+### Stages to execute
+###
+stages:
+  Verify:
+    actions:
+      #
+      # Validate database connection
+      # https://docs.liquibase.com/commands/change-tracking/connect.html
+      #
+      - type: liquibase
+        command: connect
+      #
+      # Remove existing changelog file
+      #
+      - type: shell
+        if: "exists('${NEW_CHANGELOG_FILE}', false)"
+        command: del /f Changesets\${NEW_CHANGELOG_FILE}
+  GenerateChangelog:
+    actions:
+      #
+      # Generate Changelog
+      # https://docs.liquibase.com/commands/inspection/diff-changelog.html
+      #
+      - type: liquibase
+        command: diff-changelog
+        cmdArgs: { author: "${NEW_AUTHOR}", changelog-file: "Changesets/${NEW_CHANGELOG_FILE}", include-schema: "true", label-filter: "${NEW_LABEL_FILTER}", url: "offline:snowflake?snapshot=${SNAPSHOT_FILE}" }
+  AddChangeset:
+    actions:
+      - type: shell
+        command: python Scripts/seed_email.py Changesets/${NEW_CHANGELOG_FILE} ${NEW_AUTHOR} ${NEW_LABEL_FILTER}
+  MarkAsRan:
+    actions:
+      - type: liquibase
+        command: mark-next-changeset-ran
+
+###
+### Always execute
+###
+endStage:
+  actions:
+    #
+    # Show deployed changes
+    # https://docs.liquibase.com/commands/change-tracking/history.html
+    #
+    - type: liquibase
+      command: history

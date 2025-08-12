@@ -1,0 +1,76 @@
+version: 2
+
+sources:
+  - name: prod
+    database: PRODDB
+    schema: PUBLIC
+    tables:
+      - name: customers
+        description: "Customer master table in production"
+        columns:
+          - name: customer_id
+            description: "Primary key"
+            tests: [not_null, unique]
+          - name: customer_name
+            description: "Customer's full name"
+          - name: signup_date
+            description: "Date of signup"
+          - name: country_code
+          - name: is_active
+
+      - name: orders
+        description: "Orders table in production"
+        columns:
+          - name: order_id
+            description: "Unique order ID"
+            tests: [not_null, unique]
+          - name: customer_id
+            description: "Foreign key to customers"
+          - name: total_amount
+            description: "Total value of the order"
+          - name: order_date
+            description: "Order date"
+          - name: modified_at
+            description: "Last modified timestamp"
+
+models:
+  - name: customer_order_summary
+    description: "Summary of customer orders with key metrics and customer segmentation."
+    database: PRODDB
+    schema: DBT
+    columns:
+      - name: customer_id
+        description: "Unique customer ID"
+        tests: [not_null, unique]
+      - name: order_count
+        description: "Number of orders made by customer"
+      - name: total_spent
+        description: "Sum of total_amount per customer"
+      - name: last_order_date
+        description: "Most recent order date"
+      - name: customer_type
+        description: "'high_value' if total_spent > 1000"
+      - name: most_recent_order_id
+        description: "Order ID of the most recent order"
+
+  - name: orders_view
+    description: "A view of orders with a classification of order value as high_value or regular."
+    columns:
+      - name: order_id
+        description: "Unique order ID"
+        tests:
+          - not_null
+          - unique
+      - name: customer_id
+        description: "ID of the customer who placed the order"
+        tests:
+          - not_null
+      - name: total_amount
+        description: "Total amount for the order"
+      - name: order_date
+        description: "Date when the order was placed"
+      - name: modified_at
+        description: "Timestamp when the order was last modified"
+      - name: order_value_type
+        description: "'high_value' if total_amount > 1000, else 'regular'"
+

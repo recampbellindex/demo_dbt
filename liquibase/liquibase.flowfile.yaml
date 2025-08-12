@@ -1,0 +1,119 @@
+###
+### Liquibase version: 4.30.0+
+###
+### Liquibase sales: https://www.liquibase.com/contact-us
+### Liquibase support: https://support.liquibase.com
+###
+
+###
+### Flow documentation: https://docs.liquibase.com/commands/flow/flow.html
+###
+
+###
+### Global variables used in the flowfile
+###
+globalVariables:
+  LB_BASE_DIR: "${LB_BASE_DIR:-.}"
+  LB_ENVIRONMENT: "${LB_ENVIRONMENT:-DEV}"
+  LB_LABELS: "${LB_LABELS:-null}"
+  LB_TEST_CHECKS: "${LB_TEST_CHECKS:-T}"
+
+  DBT_MODELS: "${DBT_MODELS:-customer_order_summary orders_view}"
+  DBT_PROFILE: "${DBT_PROFILE:-liquibase}"
+  DBT_PROJECT_DIR: "${DBT_PROJECT_DIR:-/Users/adeelmalik/Desktop/LiquibaseHub/DBT}"
+
+  CHECKS_REPORT: "Checks_${LB_ENVIRONMENT}.html"
+  SNAPSHOT_FILE: "Snapshot_${LB_ENVIRONMENT}.json"
+  UPDATE_REPORT: "Update_${LB_ENVIRONMENT}.html"
+
+###
+### Stages to execute
+###
+stages:
+  Verify:
+    actions:
+      #
+      # Validate database connection
+      # https://docs.liquibase.com/commands/change-tracking/connect.html
+      #
+      - type: liquibase
+        command: connect
+      #
+      # Validate changelog
+      # https://docs.liquibase.com/commands/utility/validate.html
+      #
+      - type: liquibase
+        command: validate
+      #
+      # View pending changes
+      # https://docs.liquibase.com/commands/change-tracking/status.html
+      #
+      - type: liquibase
+        command: status
+        cmdArgs: { label-filter: "${LB_LABELS}" }
+  PolicyChecks:
+    actions:
+      #
+      # Show policy checks
+      # https://docs.liquibase.com/liquibase-pro/policy-checks/home.html
+      #
+      - type: liquibase
+        if: "${LB_TEST_CHECKS} == T"
+        command: checks show
+        cmdArgs: { check-status: "enabled" }
+      #
+      # Run policy checks
+      # https://docs.liquibase.com/liquibase-pro/policy-checks/home.html
+      #
+      - type: liquibase
+        if: "${LB_TEST_CHECKS} == T"
+        command: checks run
+        cmdArgs: { report-enabled: "true", report-path: "${LB_BASE_DIR}", report-name: "${CHECKS_REPORT}", checks-output: "issues", checks-scope: "changelog, database", changeset-filter: "pending", auto-update: "on" }
+        globalArgs: { reports-open: "false" }
+  Deploy:
+    actions:
+      #
+      # Exit if no pending changes
+      # https://docs.liquibase.com/liquibase-pro/flow/home.html
+      #
+      - type: control
+        if: "status.changesetCount == 0"
+        command: exit
+        cmdArgs: { exitCode: "0", exitMessage: "Database is current!" }
+      #
+      # Update database
+      # https://docs.liquibase.com/commands/update/update.html
+      #
+      - type: liquibase
+        command: update
+        cmdArgs: { label-filter: "${LB_LABELS}", report-enabled: "true", report-path: "${LB_BASE_DIR}", report-name: "${UPDATE_REPORT}" }
+        globalArgs: { reports-open: "false" }
+  DBT:
+    actions:
+      #
+      # Run Data Build Tool
+      #
+      - type: shell
+        command: dbt build --profile ${DBT_PROFILE} --project-dir ${DBT_PROJECT_DIR} --select ${DBT_MODELS} --full-refresh
+  PostDeploy:
+    actions:
+      #
+      # Create updated snapshot
+      # https://docs.liquibase.com/commands/inspection/snapshot.html
+      #
+      - type: liquibase
+        command: snapshot
+        globalArgs: { outputfile: "${LB_BASE_DIR}/${SNAPSHOT_FILE}" }
+        cmdArgs: { snapshotFormat: "json" }
+
+###
+### Always execute
+###
+endStage:
+  actions:
+    #
+    # Show deployed changes
+    # https://docs.liquibase.com/commands/change-tracking/history.html
+    #
+    - type: liquibase
+      command: history
